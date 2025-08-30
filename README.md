@@ -1,33 +1,28 @@
 # Ritual War Discord Bot
 
-A multi-server Discord bot for running the "Ritual War" game - a social deduction game where players cast spells on each other to be the last mage standing.
+A multi-server Discord bot for running the "Ritual War" game - a strategic social game where players cast spells to be the last mage standing.
 
 ## 🎮 Game Overview
 
-Ritual War is a strategic social game where players:
+Ritual War is a daily-action strategy game where players:
 - **Join** the game as mages
-- **Cast spells** on other players (Hex to deal damage, Shield to protect, Mend to heal)
-- **Make claims** about their actions to influence others
+- **Cast one spell per day** (Hex to attack, Shield to protect, Mend to heal)
+- **Make public claims** about their actions to influence others
 - **Survive** until they're the last mage standing to win
 
-### Game Mechanics
-- **Doom Points**: Players start with 0 doom and are eliminated at 12+ doom
-- **Daily Actions**: Each player can perform one action per day
-- **Spells**:
-  - 🔥 **Hex**: Deal 2-4 doom damage to a target
-  - 🛡️ **Shield**: Protect yourself, reducing next damage by 50% and cleansing 2 doom
-  - 💚 **Mend**: Remove 2-4 doom from a target
-- **Claims**: Publicly announce your actions to influence the game
-- **Time Zones**: Actions refresh based on Pacific Time zones (Fresh/Warm/Cooling periods)
+### Core Mechanics
+- **Doom System**: Players start with 0 doom and are eliminated at 12+ doom
+- **Daily Actions**: One action per day based on Pacific Time
+- **Signature System**: Multiple players targeting the same person increases spell effectiveness
+- **Social Layer**: Public claims can be true or false to create political gameplay
 
 ## 🌟 Features
 
 - **Multi-Server Support**: Each Discord server has completely isolated game states
-- **Flexible Channel Configuration**: Admins can set which channel receives public game messages
-- **Daily Notifications**: Automated reminders sent to all active players
-- **XP Integration**: Winners receive XP rewards (requires separate XP bot)
+- **Flexible Channel Configuration**: Admins can set which channel receives public messages
+- **Daily Notifications**: Automated reminders for active players
 - **Comprehensive Logging**: Full audit trail of all game actions
-- **Error Handling**: Robust error handling with automatic recovery
+- **Robust Error Handling**: Automatic recovery from common issues
 
 ## 🛠️ Setup
 
@@ -58,7 +53,7 @@ Ritual War is a strategic social game where players:
 4. **Configure environment**:
    ```bash
    cp .env.example .env
-   # Edit .env with your bot token and configuration
+   # Edit .env with your bot token
    ```
 
 5. **Run the bot**:
@@ -68,27 +63,24 @@ Ritual War is a strategic social game where players:
 
 ### Environment Variables
 
-Create a `.env` file with the following variables:
+Create a `.env` file with:
 
 ```env
-# Required
 DISCORD_BOT_TOKEN=your_bot_token_here
-
-# Optional
-BOT_OWNER_ID=your_discord_user_id
-HEAD_DM_ID=discord_user_id_for_xp_notifications
+BOT_OWNER_ID=your_discord_user_id  # Optional, for admin commands
 ```
 
 ### Discord Bot Permissions
 
-The bot requires the following permissions:
+Required permissions:
 - `Send Messages`
-- `Use Slash Commands`
+- `Use Slash Commands`  
 - `Embed Links`
 - `Read Message History`
 - `View Channels`
 
-### Invite URL
+### Bot Invite URL
+Replace `YOUR_BOT_CLIENT_ID` with your bot's client ID:
 ```
 https://discord.com/api/oauth2/authorize?client_id=YOUR_BOT_CLIENT_ID&permissions=277025524800&scope=bot%20applications.commands
 ```
@@ -97,20 +89,20 @@ https://discord.com/api/oauth2/authorize?client_id=YOUR_BOT_CLIENT_ID&permission
 
 ### Player Commands
 - `/join` - Join the Ritual War game
-- `/leave` - Leave the game
+- `/leave` - Leave the game  
 - `/hex <target>` - Cast Hex spell on target player
 - `/shield` - Cast Shield spell on yourself
 - `/mend <target>` - Cast Mend spell on target player
-- `/inspect [player]` - Check a player's status (or your own)
+- `/inspect [player]` - Check a player's status (defaults to self)
 - `/leaderboard` - View current game state and all players
 - `/claimhex <target>` - Publicly claim you hexed a player
 - `/claimmend <target>` - Publicly claim you mended a player
 - `/unclaim <target> <action>` - Remove a public claim
 
-### Admin Commands
-- `/admin_setchannel <channel>` - Set the channel for public game messages (Admin only)
+### Admin Commands  
+- `/admin_setchannel <channel>` - Set channel for public messages (Admin only)
 - `/admin_reset_game` - Reset the entire game state (Bot owner only)
-- `/admin_force_winner <player>` - Manually declare a winner (Bot owner only)
+- `/admin_force_winner <player>` - Manually declare a winner (Bot owner only) 
 - `/admin_advance_day` - Reset daily action limits for testing (Bot owner only)
 
 ## 🏗️ Architecture
@@ -120,110 +112,62 @@ ritual-war/
 ├── bot.py                 # Main bot entry point
 ├── error_handler.py       # Global error handling
 ├── requirements.txt       # Python dependencies
+├── .env.example          # Environment template
 ├── game/
-│   ├── __init__.py
-│   ├── commands.py        # Slash command definitions
+│   ├── commands.py        # Player slash commands
 │   ├── admin_commands.py  # Admin-only commands
-│   ├── logic.py          # Core game logic
-│   ├── storage.py        # Database operations
-│   ├── models.py         # Data models
-│   ├── view.py           # Message formatting
-│   ├── notifications.py  # Channel management & notifications
-│   ├── scheduler.py      # Daily notification scheduler
+│   ├── logic.py          # Core game mechanics
+│   ├── storage.py        # Database operations  
+│   ├── models.py         # Data structures
+│   ├── view.py           # Discord message formatting
+│   ├── notifications.py  # Channel management
+│   ├── scheduler.py      # Daily notification system
 │   ├── config.py         # Game configuration
-│   └── timeutils.py      # Time zone utilities
-└── .env                  # Environment configuration (not in repo)
+│   └── timeutils.py      # Timezone utilities
 ```
 
-## 🗄️ Database Schema
+## 🗄️ Database
 
-The bot uses SQLite with the following tables:
-- **players**: Player information (user_id, guild_id, doom, veil_until, etc.)
-- **signatures**: Public claims made by players
-- **game_state**: Per-guild game configuration and state
-
-All data is isolated by `guild_id` for multi-server support.
+Uses SQLite with guild-based data isolation:
+- **players**: Player information per server
+- **signatures**: Active spell effects with expiration  
+- **claims**: Public claims made by players
+- **game_state**: Per-server configuration
 
 ## 🔧 Configuration
 
-### Game Settings (config.py)
-- `THRESHOLD`: Doom points needed for elimination (default: 12)
-- `SHIELD_CLEANSE`: Doom removed by Shield spell (default: 2)
-- `SIGNATURE_TTL_HOURS`: How long claims last (default: 24 hours)
-- `VEIL_REDUCTION`: Shield damage reduction (default: 50%)
-- `XP_REWARD_AMOUNT`: XP awarded to winners (default: 100)
+Game settings in `game/config.py`:
+- `THRESHOLD = 12` - Doom points for elimination
+- `SHIELD_CLEANSE = 2` - Doom removed by Shield  
+- `SIGNATURE_TTL_HOURS = 24` - How long spell effects last
+- `VEIL_REDUCTION = 0.5` - Shield damage reduction (50%)
 
-### Time Zones
-The game uses Pacific Time with three periods:
-- **Fresh** (12 AM - 6 AM): Optimal action time
-- **Warm** (6 AM - 6 PM): Standard action time  
-- **Cooling** (6 PM - 12 AM): Action time with warnings
+## 🎯 Game Rules
 
-## 🚀 Deployment
+### Victory Condition
+Be the last active player remaining.
 
-### Systemd Service (Linux)
-```ini
-[Unit]
-Description=Ritual War Discord Bot
-After=network.target
+### Spells
+- **Hex**: Deal damage based on number of hexers targeting the same player
+- **Shield**: Reduce your doom by 2 and gain 50% damage reduction for 24 hours
+- **Mend**: Heal damage based on number of menders targeting the same player
 
-[Service]
-Type=simple
-User=your_user
-WorkingDirectory=/path/to/ritual-war
-ExecStart=/path/to/ritual-war/venv/bin/python bot.py
-Restart=always
-RestartSec=10
-
-[Install]
-WantedBy=multi-user.target
-```
-
-### Docker (Optional)
-```dockerfile
-FROM python:3.11-slim
-WORKDIR /app
-COPY requirements.txt .
-RUN pip install -r requirements.txt
-COPY . .
-CMD ["python", "bot.py"]
-```
+### Social Elements
+- **Claims**: Publicly announce your actions (can be true or false)
+- **Signatures**: Spell effects stack when multiple players target the same person
+- **Daily Limits**: One action per player per day
 
 ## 📊 Logging
 
-The bot provides comprehensive logging:
-- Game actions and results
-- Command usage and errors
-- Daily notification delivery
-- Database operations
-- Discord API interactions
-
-Logs are written to `ritual_war.log` with rotation.
+The bot logs all game actions, errors, and system events to `ritual_war.log` for debugging and monitoring.
 
 ## 🤝 Contributing
 
 1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'Add amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
+2. Create a feature branch
+3. Make your changes
+4. Submit a pull request
 
 ## 📄 License
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
-## 🆘 Support
-
-For support, create an issue on GitHub or contact the bot administrator.
-
-## 🎯 Roadmap
-
-- [ ] Web dashboard for game management
-- [ ] Additional spell types
-- [ ] Tournament mode
-- [ ] Player statistics and achievements
-- [ ] Custom game rule configurations per server
-
----
-
-*Made with ❤️ for D&D communities*
+This project is licensed under the MIT License.
